@@ -1,0 +1,910 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#fff8e7" />
+  <title>Emergency Cheer-Up Station</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🧸</text></svg>" />
+
+  <script>document.documentElement.classList.add('js');</script>
+
+  <!-- Tailwind Play CDN: the only external file. Everything else is plain HTML/CSS/JS. -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            cream:    { 50: '#fffdf7', 100: '#fff8e7', 200: '#fdf0d0' },
+            lavender: { 50: '#f7f4ff', 100: '#ede7fb', 200: '#ddd2f6', 300: '#c6b5ee', 400: '#a994e0', 500: '#8b73cf', 600: '#6a52b8' },
+            honey:    { 50: '#fff8eb', 100: '#ffefcf', 200: '#ffdf9f', 300: '#ffcb6b', 400: '#f8b24a', 500: '#e89a2b', 600: '#c77a14' },
+            peach:    { 100: '#ffe6dc', 200: '#ffd0bf', 300: '#f6b9a6', 600: '#b4513a' }
+          },
+          fontFamily: {
+            sans: ['ui-rounded', '"Nunito"', '"Quicksand"', '"Segoe UI"', 'system-ui', '-apple-system', 'sans-serif']
+          }
+        }
+      }
+    };
+  </script>
+
+  <style>
+    [hidden] { display: none !important; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0; overflow-x: hidden;
+      background: linear-gradient(165deg, #fffdf7 0%, #f7f4ff 45%, #fff3dc 100%) fixed;
+    }
+
+    /* ================= Background ================= */
+    .blob {
+      position: fixed; border-radius: 50%; filter: blur(60px); opacity: .55; z-index: 0; pointer-events: none;
+      animation: drift 22s ease-in-out infinite alternate;
+    }
+    .b1 { width: 360px; height: 360px; background: #ddd2f6; top: -80px; left: -100px; }
+    .b2 { width: 320px; height: 320px; background: #ffdf9f; bottom: -60px; right: -90px; animation-delay: -8s; }
+    .b3 { width: 260px; height: 260px; background: #ffd0bf; top: 45%; left: 55%; opacity: .35; animation-delay: -14s; }
+    @keyframes drift { to { transform: translate(40px, -30px) scale(1.15); } }
+
+    #floaters { position: fixed; inset: 0; overflow: hidden; pointer-events: none; z-index: 0; }
+    .floater {
+      position: absolute; bottom: 0; opacity: 0; will-change: transform, opacity;
+      animation: floatUp var(--dur) linear var(--delay) infinite;
+    }
+    @keyframes floatUp {
+      0%   { transform: translate3d(0, 10vh, 0) rotate(0deg); opacity: 0; }
+      10%  { opacity: .75; }
+      90%  { opacity: .75; }
+      100% { transform: translate3d(var(--sway), -115vh, 0) rotate(var(--rot)); opacity: 0; }
+    }
+    .twinkle {
+      position: fixed; z-index: 0; pointer-events: none; color: #f8b24a; opacity: 0;
+      animation: twinkle var(--dur) ease-in-out var(--delay) infinite;
+    }
+    @keyframes twinkle { 0%, 100% { opacity: 0; transform: scale(.4) rotate(0); } 50% { opacity: .9; transform: scale(1) rotate(25deg); } }
+
+    /* ================= Cards & bits ================= */
+    .card {
+      position: relative; background: rgba(255, 255, 255, .86); border: 3px solid #fff; border-radius: 2rem;
+      box-shadow: 0 7px 0 var(--edge, #ddd2f6), 0 26px 40px -20px rgba(139, 115, 207, .4);
+      backdrop-filter: blur(6px);
+    }
+    .chip {
+      display: inline-flex; align-items: center; gap: .3rem; padding: .35rem .85rem; border-radius: 999px;
+      font-weight: 800; box-shadow: 0 3px 0 rgba(0, 0, 0, .06); transition: transform .2s cubic-bezier(.3, 1.6, .5, 1);
+    }
+    .chip:hover { transform: translateY(-2px) rotate(0deg) scale(1.05); }
+
+    .js .reveal { opacity: 0; transform: translateY(26px); transition: opacity .6s ease, transform .6s cubic-bezier(.2, .8, .3, 1); }
+    .js .reveal.in { opacity: 1; transform: none; }
+
+    .title-grad {
+      background: linear-gradient(90deg, #8b73cf, #e89a2b, #8b73cf); background-size: 200% auto;
+      -webkit-background-clip: text; background-clip: text; color: transparent; animation: shine 6s linear infinite;
+    }
+    @keyframes shine { to { background-position: 200% center; } }
+    .hero-bear { display: inline-block; font-size: 4.8rem; line-height: 1; animation: bob 3s ease-in-out infinite; filter: drop-shadow(0 10px 8px rgba(139, 115, 207, .3)); }
+    @keyframes bob { 0%, 100% { transform: translateY(0) rotate(-4deg); } 50% { transform: translateY(-10px) rotate(4deg); } }
+    @keyframes wiggle { 25% { transform: rotate(-8deg) scale(1.1); } 75% { transform: rotate(8deg) scale(1.1); } }
+
+    /* ================= Menu ================= */
+    .menu-btn {
+      --bg: #ffefcf; --edge: #ffdf9f; --fg: #c77a14;
+      display: flex; align-items: center; gap: .85rem; text-align: left; padding: .9rem 1rem; border-radius: 1.4rem;
+      background: var(--bg); color: var(--fg); border: 3px solid #fff; box-shadow: 0 6px 0 var(--edge);
+      font-weight: 800; cursor: pointer; touch-action: manipulation; -webkit-tap-highlight-color: transparent;
+      transition: transform .15s cubic-bezier(.3, 1.6, .5, 1), box-shadow .15s;
+    }
+    .menu-btn:hover { transform: translateY(-4px) rotate(-1deg); box-shadow: 0 10px 0 var(--edge); }
+    .menu-btn:active { transform: translateY(4px); box-shadow: 0 2px 0 var(--edge); }
+    .menu-btn:focus-visible { outline: 4px solid #a994e0; outline-offset: 3px; }
+    .menu-btn:hover .menu-emoji { animation: wiggle .5s; }
+    .m-lav   { --bg: #ede7fb; --edge: #c6b5ee; --fg: #6a52b8; }
+    .m-peach { --bg: #ffe6dc; --edge: #f6b9a6; --fg: #b4513a; }
+    .menu-emoji { display: grid; place-items: center; flex: none; width: 3.2rem; height: 3.2rem; border-radius: 1rem; background: rgba(255, 255, 255, .8); font-size: 1.8rem; }
+    .menu-title { display: block; line-height: 1.2; }
+    .menu-sub { display: block; margin-top: .15rem; font-size: .75rem; font-weight: 700; opacity: .75; }
+    @media (min-width: 640px) { .menu-btn { flex-direction: column; text-align: center; padding: 1.1rem .9rem; } }
+
+    .bubble {
+      position: relative; background: #fff; border: 3px solid var(--edge, #ddd2f6); border-radius: 1.5rem;
+      padding: 1.25rem 1.1rem; min-height: 8rem; display: grid; place-items: center; text-align: center;
+    }
+    .bubble::before {
+      content: ""; position: absolute; top: -10px; left: 2.2rem; width: 16px; height: 16px; background: #fff;
+      border-left: 3px solid var(--edge, #ddd2f6); border-top: 3px solid var(--edge, #ddd2f6);
+      transform: rotate(45deg); border-radius: 4px 0 0 0;
+    }
+    .fade-in { animation: fadeIn .45s cubic-bezier(.3, 1.4, .5, 1) both; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px) scale(.96); } to { opacity: 1; transform: none; } }
+    .punch-pop { animation: punchPop .55s cubic-bezier(.3, 1.8, .5, 1) both; }
+    @keyframes punchPop { from { opacity: 0; transform: scale(.4) rotate(-6deg); } to { opacity: 1; transform: none; } }
+    .drum { letter-spacing: .3em; color: #c6b5ee; animation: drumDots .8s ease-in-out infinite alternate; }
+    @keyframes drumDots { to { opacity: .35; } }
+    .another {
+      margin-top: .9rem; border-radius: 999px; padding: .4rem 1rem; font-weight: 800; font-size: .85rem; cursor: pointer;
+      background: #ede7fb; color: #6a52b8; border: 2px solid #ddd2f6; box-shadow: 0 3px 0 #ddd2f6; transition: transform .12s, box-shadow .12s;
+    }
+    .another:hover { background: #ddd2f6; }
+    .another:active { transform: translateY(3px); box-shadow: 0 0 0 #ddd2f6; }
+    .another:focus-visible { outline: 3px solid #f8b24a; outline-offset: 2px; }
+
+    /* ================= Game: UI ================= */
+    .mascot { display: inline-block; flex: none; font-size: 3.4rem; line-height: 1; transform-origin: 50% 100%; animation: bob 2.6s ease-in-out infinite; }
+    .mascot.cheer { animation: hop .55s ease; }
+    @keyframes hop { 30% { transform: translateY(-24px) rotate(-8deg) scale(1.12); } 60% { transform: translateY(0) rotate(6deg) scale(.96); } }
+    .say {
+      position: relative; flex: 1; background: #fff; border: 3px solid #ddd2f6; border-radius: 1.25rem;
+      padding: .7rem .9rem; font-weight: 700; font-size: .92rem; line-height: 1.3;
+    }
+    .say::before {
+      content: ""; position: absolute; left: -10px; bottom: 14px; width: 16px; height: 16px; background: #fff;
+      border-left: 3px solid #ddd2f6; border-bottom: 3px solid #ddd2f6; transform: rotate(45deg); border-radius: 0 0 0 4px;
+    }
+    .say.say-pop { animation: sayPop .35s cubic-bezier(.3, 1.6, .5, 1); }
+    @keyframes sayPop { from { transform: scale(.85); opacity: .4; } to { transform: none; opacity: 1; } }
+
+    .step { display: flex; gap: .6rem; align-items: flex-start; background: #fff; border: 2px dashed #ddd2f6; border-radius: 1.1rem; padding: .65rem .75rem; font-size: .88rem; line-height: 1.3; }
+    .num { flex: none; display: grid; place-items: center; width: 1.7rem; height: 1.7rem; border-radius: 50%; background: #f8b24a; color: #fff; font-weight: 900; box-shadow: 0 2px 0 #c77a14; }
+
+    .stat { background: #fff; border-radius: 1.1rem; padding: .45rem .25rem; border: 2px solid #ede7fb; box-shadow: 0 3px 0 #ede7fb; }
+    .stat small { display: block; font-size: .66rem; font-weight: 800; letter-spacing: .07em; text-transform: uppercase; color: #8b73cf; }
+    .stat b { display: inline-block; font-size: 1.4rem; font-weight: 900; color: #c77a14; }
+    .bump { animation: bump .3s; }
+    @keyframes bump { 50% { transform: scale(1.4); } }
+
+    .timer { position: relative; height: 1.5rem; border-radius: 999px; background: #ede7fb; overflow: hidden; box-shadow: inset 0 2px 4px rgba(139, 115, 207, .25); }
+    .timer span { position: absolute; inset: 0 auto 0 0; width: 100%; border-radius: 999px; background: linear-gradient(90deg, #c6b5ee, #f8b24a); transition: width .1s linear; }
+    .timer em { position: absolute; inset: 0; display: grid; place-items: center; font-style: normal; font-size: .75rem; font-weight: 900; color: #4b3a8a; }
+    .timer.hurry span { background: linear-gradient(90deg, #f6b9a6, #f08a6b); animation: throb .5s infinite alternate; }
+    @keyframes throb { to { filter: brightness(1.15); } }
+
+    .pill { border-radius: 999px; padding: .3rem .9rem; font-weight: 800; font-size: .85rem; background: #fff; border: 2px solid #ddd2f6; color: #8b73cf; cursor: pointer; transition: .15s; }
+    .pill.is-on { background: #8b73cf; border-color: #8b73cf; color: #fff; box-shadow: 0 3px 0 #6a52b8; }
+    .pill:disabled { opacity: .55; cursor: not-allowed; }
+    .pill:focus-visible { outline: 3px solid #f8b24a; outline-offset: 2px; }
+
+    .big-btn {
+      border: 0; border-radius: 999px; padding: .85rem 2rem; font-size: 1.1rem; font-weight: 900; cursor: pointer; color: #fff;
+      background: #8b73cf; box-shadow: 0 6px 0 #6a52b8; transition: transform .1s, box-shadow .1s; touch-action: manipulation;
+    }
+    .big-btn:hover { background: #9a83dc; }
+    .big-btn:active { transform: translateY(5px); box-shadow: 0 1px 0 #6a52b8; }
+    .big-btn:focus-visible { outline: 4px solid #f8b24a; outline-offset: 3px; }
+    .pulse { animation: pulse 1.4s ease-in-out infinite; }
+    @keyframes pulse { 50% { transform: scale(1.07); } }
+
+    /* ================= Game: board ================= */
+    .board-wrap { position: relative; margin: 1rem auto 0; max-width: 30rem; }
+    .board {
+      display: grid; grid-template-columns: repeat(3, 1fr); gap: .5rem; padding: .75rem; border-radius: 2rem;
+      background: radial-gradient(circle at 50% 0%, #f7f4ff, #ddd2f6); border: 3px solid #fff;
+      box-shadow: 0 6px 0 #c6b5ee, inset 0 0 24px rgba(139, 115, 207, .25); user-select: none; -webkit-user-select: none;
+    }
+    @media (min-width: 640px) { .board { gap: .9rem; padding: 1.1rem; } }
+    .board.shake { animation: shake .3s; }
+    @keyframes shake { 20% { transform: translate(-4px, 2px); } 40% { transform: translate(4px, -2px); } 60% { transform: translate(-3px, 1px); } 80% { transform: translate(3px, -1px); } }
+
+    .overlay {
+      position: absolute; inset: 0; z-index: 5; border-radius: 2rem; display: grid; place-items: center; text-align: center;
+      padding: 1rem; background: rgba(255, 253, 247, .84); backdrop-filter: blur(5px); transition: opacity .3s, visibility .3s;
+    }
+    .overlay.is-hidden { opacity: 0; visibility: hidden; pointer-events: none; }
+    .count-num { font-size: 5.5rem; line-height: 1; font-weight: 900; color: #8b73cf; animation: countPop .7s ease both; }
+    @keyframes countPop { 0% { transform: scale(.3); opacity: 0; } 30% { transform: scale(1.25); opacity: 1; } 100% { transform: scale(1); opacity: .9; } }
+    .final { font-size: 3.6rem; line-height: 1; font-weight: 900; color: #e89a2b; animation: punchPop .6s cubic-bezier(.3, 1.8, .5, 1) both; }
+
+    /* Whack holes */
+    .cell {
+      position: relative; aspect-ratio: 1 / 1; border: 0; padding: 0; background: transparent; overflow: hidden; cursor: pointer;
+      container-type: inline-size; border-radius: 1.25rem; touch-action: manipulation; -webkit-tap-highlight-color: transparent;
+    }
+    .cell:focus-visible { outline: 3px solid #f8b24a; outline-offset: 2px; }
+    .cell.jolt { animation: jolt .2s; }
+    @keyframes jolt { 25% { transform: translateX(-3px) rotate(-2deg); } 75% { transform: translateX(3px) rotate(2deg); } }
+    .hole-back {
+      position: absolute; left: 6%; right: 6%; bottom: 5%; height: 30%; border-radius: 50%;
+      background: radial-gradient(ellipse at 50% 30%, #6d57b5, #3f2f7a); box-shadow: inset 0 6px 10px rgba(0, 0, 0, .4);
+    }
+    .worry {
+      --wbg: radial-gradient(circle at 35% 28%, #ffd6a5, #f8b24a); --wfg: #5b3b0f; --fs: 13;
+      position: absolute; left: 11%; width: 78%; aspect-ratio: 1 / 1; bottom: -85%; z-index: 1; border-radius: 50%;
+      display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3%;
+      text-align: center; font-weight: 900; line-height: 1.02; padding: 6%;
+      background: var(--wbg); color: var(--wfg); transform-origin: 50% 100%;
+      box-shadow: inset 0 -6px 0 rgba(0, 0, 0, .08), 0 4px 0 rgba(0, 0, 0, .08);
+      transition: bottom .3s cubic-bezier(.3, 1.8, .5, 1);
+      font-size: 11px; font-size: calc(var(--fs) * 1cqw);
+    }
+    .cell.up .worry { bottom: 17%; }
+    .wtxt { display: block; max-width: 100%; word-break: break-word; }
+    .eyes { display: flex; gap: 14%; margin-top: 4%; }
+    .eyes i { position: relative; width: 7px; height: 9px; width: 7cqw; height: 9cqw; border-radius: 50%; background: #2b2140; transform-origin: 50% 50%; }
+    .eyes i::after { content: ""; position: absolute; top: 14%; left: 22%; width: 34%; height: 34%; border-radius: 50%; background: #fff; }
+    .cell.up .eyes i { animation: blink 3.2s infinite; }
+    @keyframes blink { 0%, 92%, 100% { transform: scaleY(1); } 96% { transform: scaleY(.1); } }
+    .worry.pup { --wbg: radial-gradient(circle at 35% 28%, #fff8e7, #f0d3a8); --fs: 15; font-size: 34px; font-size: 38cqw; padding: 0; }
+    .worry.pup .eyes { display: none; }
+    .worry.golden { --wbg: radial-gradient(circle at 35% 28%, #fff6bd, #ffc93c); animation: glow .9s ease-in-out infinite alternate; }
+    .worry.golden::before { content: "✨"; position: absolute; top: 0; right: 2%; font-size: 18px; font-size: 18cqw; animation: twinkle 1s ease-in-out infinite; }
+    @keyframes glow { from { box-shadow: inset 0 -6px 0 rgba(0, 0, 0, .08), 0 0 0 0 rgba(255, 201, 60, 0); } to { box-shadow: inset 0 -6px 0 rgba(0, 0, 0, .08), 0 0 20px 7px rgba(255, 201, 60, .85); } }
+    .worry.hit { animation: squash .28s ease-out forwards; }
+    @keyframes squash {
+      0%   { transform: scale(1, 1); opacity: 1; }
+      35%  { transform: scale(1.3, .5); opacity: 1; }
+      100% { transform: scale(.2, .1); opacity: 0; }
+    }
+    .mound {
+      position: absolute; left: 3%; right: 3%; bottom: 0; height: 31%; z-index: 2; pointer-events: none;
+      border-radius: 50% 50% 1.1rem 1.1rem / 85% 85% 1.1rem 1.1rem;
+      background: linear-gradient(#c6b5ee, #a994e0); box-shadow: inset 0 4px 0 #ddd2f6, inset 0 -6px 0 rgba(106, 82, 184, .25);
+    }
+
+    /* ================= Effects ================= */
+    .fx { position: fixed; left: 0; top: 0; z-index: 60; pointer-events: none; will-change: transform, opacity; line-height: 1; white-space: nowrap; }
+    .fx.pop { font-weight: 900; font-size: 1.6rem; color: #8b73cf; text-shadow: 0 2px 0 #fff, 0 0 10px #fff; }
+    .fx.plus { font-size: 1.2rem; color: #e89a2b; }
+    .fx.gold { color: #d99200; }
+    .fx.pupc { color: #b4513a; }
+
+    :focus-visible { outline-offset: 3px; }
+
+    @media (prefers-reduced-motion: reduce) {
+      html { scroll-behavior: auto; }
+      #floaters, .twinkle, .blob { display: none; }
+      *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
+    }
+  </style>
+</head>
+
+<body class="font-sans text-stone-700 antialiased">
+
+  <div aria-hidden="true"><span class="blob b1"></span><span class="blob b2"></span><span class="blob b3"></span></div>
+  <div id="floaters" aria-hidden="true"></div>
+
+  <div class="relative z-10 mx-auto max-w-3xl px-4 py-8 sm:py-12 space-y-8">
+
+    <!-- ================= HERO ================= -->
+    <header class="card reveal text-center p-6 sm:p-10">
+      <div class="hero-bear" aria-hidden="true">🧸</div>
+      <h1 class="mt-3 text-3xl sm:text-5xl font-black tracking-tight leading-tight title-grad">
+        Emergency<br class="sm:hidden" /> Cheer-Up Station
+      </h1>
+      <p class="mt-4 text-base sm:text-lg text-stone-600 max-w-xl mx-auto">
+        Hey <span id="friendName" class="font-extrabold text-honey-600">friend</span>. Having a hard time? I made this small website for you. You don't have to do anything here. Just relax and smile.
+      </p>
+      <ul class="mt-6 flex flex-wrap justify-center gap-2 text-sm">
+        <li class="chip -rotate-2 bg-honey-100 text-honey-600">✅ No pressure</li>
+        <li class="chip rotate-1 bg-lavender-100 text-lavender-600">✅ No advice</li>
+        <li class="chip -rotate-1 bg-peach-100 text-peach-600">✅ Silly jokes</li>
+        <li class="chip rotate-2 bg-[#d9f2e3] text-[#2f7a52]">✅ Pretend snacks</li>
+      </ul>
+    </header>
+
+    <main class="space-y-8">
+
+      <!-- ================= MENU ================= -->
+      <section aria-labelledby="menuTitle" class="card reveal p-5 sm:p-8" style="--edge:#ffdf9f">
+        <h2 id="menuTitle" class="text-2xl sm:text-3xl font-black text-honey-600">🚨 Emergency Cheer-Up Menu</h2>
+        <p class="text-sm sm:text-base text-stone-500 mt-1">Pick any button. There is no wrong choice. 😊</p>
+
+        <div class="mt-5 grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <button type="button" data-kind="joke" class="menu-btn">
+            <span class="menu-emoji" aria-hidden="true">🥁</span>
+            <span><span class="menu-title">Tell me a silly dad joke</span><span class="menu-sub">very silly, sorry in advance!</span></span>
+          </button>
+          <button type="button" data-kind="reality" class="menu-btn m-lav">
+            <span class="menu-emoji" aria-hidden="true">☕</span>
+            <span><span class="menu-title">Give me a gentle reality check</span><span class="menu-sub">kind and honest, no scolding</span></span>
+          </button>
+          <button type="button" data-kind="awesome" class="menu-btn m-peach">
+            <span class="menu-emoji" aria-hidden="true">🌟</span>
+            <span><span class="menu-title">Remind me why I'm awesome</span><span class="menu-sub">true things, not fake praise</span></span>
+          </button>
+        </div>
+
+        <article id="output" aria-live="polite" class="bubble mt-6" style="--edge:#ddd2f6">
+          <p class="text-stone-500 font-semibold">Your cheer-up will show up here. 🐶<br><span class="text-sm font-normal">(The dog is coming. He has short legs.)</span></p>
+        </article>
+      </section>
+
+      <!-- ================= GAME ================= -->
+      <section aria-labelledby="gameTitle" class="card reveal p-5 sm:p-8" style="--edge:#c6b5ee">
+        <h2 id="gameTitle" class="text-2xl sm:text-3xl font-black text-lavender-500">🔨 Stress Whack-a-Worry</h2>
+        <p class="text-sm sm:text-base text-stone-500 mt-1">Tap the worry bubbles to make them go away!</p>
+
+        <div class="mt-4 flex items-end gap-3">
+          <div id="mascot" class="mascot" aria-hidden="true">🐶</div>
+          <p id="mascotSay" class="say" aria-live="polite">Hi! I'm Biscuit. I'll cheer for you. Press Start when you are ready. 🐾</p>
+        </div>
+
+        <div class="mt-5">
+          <h3 class="font-extrabold text-lavender-600">How to play <span class="font-bold text-stone-400 text-sm">(30 seconds, super easy)</span></h3>
+          <ol class="mt-2 grid gap-2 sm:grid-cols-3">
+            <li class="step"><span class="num">1</span><span><b>Press Start.</b> Wait for 3, 2, 1.</span></li>
+            <li class="step"><span class="num">2</span><span><b>Tap the worry bubbles</b> when they come out of the holes. One tap = one worry gone!</span></li>
+            <li class="step"><span class="num">3</span><span><b>Tap as many as you can</b> before the time is over.</span></li>
+          </ol>
+          <ul class="mt-3 flex flex-wrap gap-2 text-xs sm:text-sm">
+            <li class="chip bg-honey-100 text-honey-600">🌟 Golden worry = 3 points</li>
+            <li class="chip bg-peach-100 text-peach-600">🐶 Tap the puppy = +2 points</li>
+            <li class="chip bg-[#d9f2e3] text-[#2f7a52]">🛟 No minus points, ever</li>
+          </ul>
+        </div>
+
+        <div class="mt-5 grid grid-cols-3 gap-2 text-center">
+          <div class="stat"><small>Score</small><b id="score">0</b></div>
+          <div class="stat"><small>Best</small><b id="best">0</b></div>
+          <div class="stat"><small>Streak</small><b id="combo">–</b></div>
+        </div>
+
+        <div id="timer" class="timer mt-3" role="progressbar" aria-label="Time left" aria-valuemin="0" aria-valuemax="30" aria-valuenow="30">
+          <span id="bar"></span><em id="time">30s</em>
+        </div>
+
+        <div class="mt-3 flex items-center justify-center gap-2 text-sm font-bold text-stone-500" role="radiogroup" aria-label="Game speed">
+          Speed:
+          <button type="button" class="pill is-on" data-mode="chill" role="radio" aria-checked="true">🐢 Slow</button>
+          <button type="button" class="pill" data-mode="zoomy" role="radio" aria-checked="false">🐇 Fast</button>
+        </div>
+
+        <div class="board-wrap">
+          <div id="board" class="board" role="group" aria-label="Worry whacking board"></div>
+
+          <div id="overlay" class="overlay">
+            <div id="ovIntro">
+              <div class="text-5xl" aria-hidden="true">🔨</div>
+              <p class="mt-2 text-xl font-black text-lavender-600">Ready to play?</p>
+              <p class="mt-1 mb-5 text-sm text-stone-500">Tap the bubbles when they come up. That's all!</p>
+              <button id="startBtn" type="button" class="big-btn pulse">Start game!</button>
+            </div>
+            <div id="ovCount" hidden>
+              <p class="font-extrabold text-stone-500">Get ready…</p>
+              <div id="countNum" class="count-num" aria-live="assertive">3</div>
+            </div>
+            <div id="ovOver" hidden>
+              <p class="text-lg font-black text-lavender-600">Time's up! ⏰</p>
+              <div id="finalScore" class="final">0</div>
+              <p class="text-xs font-extrabold uppercase tracking-wider text-stone-400">worries tapped</p>
+              <p id="finalMsg" class="mt-2 mb-4 text-sm sm:text-base font-semibold text-stone-600 max-w-xs mx-auto"></p>
+              <button id="againBtn" type="button" class="big-btn">Play again</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================= NOTE ================= -->
+      <section aria-labelledby="noteTitle" class="reveal rounded-[2rem] border-[3px] border-white bg-gradient-to-br from-lavender-100 to-honey-100 p-6 sm:p-8 text-center shadow-[0_7px_0_#ddd2f6]">
+        <h2 id="noteTitle" class="text-xl sm:text-2xl font-black text-lavender-600">A quick note from your friend 🧸</h2>
+        <p class="mt-3 text-stone-700 max-w-xl mx-auto">
+          It is okay to not feel okay today. You don't have to reply or explain anything.
+          If you want to talk, I am here. If you want to send me a funny meme at night, that is fine too.
+        </p>
+      </section>
+    </main>
+
+    <footer class="text-center text-sm text-stone-500 pb-4">
+      Made with silly jokes by <span id="fromName" class="font-extrabold text-honey-600">your friend</span> ✨<br />
+      <span class="text-xs">Biscuit the pup says hi. 🐾</span>
+    </footer>
+  </div>
+
+  <script>
+    (() => {
+      'use strict';
+
+      /* ============ EDIT ME ============ */
+      const FRIEND_NAME = '';           // e.g. 'Aisha' (leave empty to say "friend")
+      const FROM_NAME   = 'Piyush';     // shows in the footer
+      /* ================================= */
+
+      const $ = (id) => document.getElementById(id);
+      const rand = (min, max) => Math.random() * (max - min) + min;
+      const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
+      const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+      if (FRIEND_NAME) $('friendName').textContent = FRIEND_NAME;
+      if (FROM_NAME)   $('fromName').textContent   = FROM_NAME;
+
+      /* ---------- Scroll reveal ---------- */
+      const reveals = document.querySelectorAll('.reveal');
+      if ('IntersectionObserver' in window) {
+        const io = new IntersectionObserver((entries) => {
+          entries.forEach((e) => { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } });
+        }, { threshold: 0.08 });
+        reveals.forEach((el) => io.observe(el));
+      } else {
+        reveals.forEach((el) => el.classList.add('in'));
+      }
+
+      /* ---------- Background floaters & twinkles ---------- */
+      const floaters = $('floaters');
+      const floatEmojis = ['🧸', '✨', '🐶', '🌼', '🍪', '☁️', '🐥', '🧋', '🐾', '🌈', '🍩'];
+      if (!reduce) {
+        for (let i = 0; i < 18; i++) {
+          const s = document.createElement('span');
+          s.className = 'floater';
+          s.textContent = floatEmojis[i % floatEmojis.length];
+          s.style.left = rand(0, 96) + 'vw';
+          s.style.fontSize = rand(1.2, 2.4) + 'rem';
+          s.style.setProperty('--dur', rand(14, 28) + 's');
+          s.style.setProperty('--delay', (-rand(0, 28)) + 's');
+          s.style.setProperty('--sway', rand(-60, 60) + 'px');
+          s.style.setProperty('--rot', rand(-40, 40) + 'deg');
+          floaters.appendChild(s);
+        }
+        for (let i = 0; i < 14; i++) {
+          const t = document.createElement('span');
+          t.className = 'twinkle';
+          t.textContent = '✦';
+          t.setAttribute('aria-hidden', 'true');
+          t.style.left = rand(2, 96) + 'vw';
+          t.style.top = rand(2, 94) + 'vh';
+          t.style.fontSize = rand(.8, 1.6) + 'rem';
+          t.style.setProperty('--dur', rand(3, 6) + 's');
+          t.style.setProperty('--delay', (-rand(0, 6)) + 's');
+          document.body.appendChild(t);
+        }
+      }
+
+      /* ---------- Effects toolkit ---------- */
+      const CONF = ['🎉', '🎊', '✨', '⭐', '💥', '🎉'];
+      const PUPCONF = ['🦴', '🐾', '⭐', '🐶', '🦴'];
+
+      const runFx = (el, keyframes, opts) => {
+        if (!el.animate) { setTimeout(() => el.remove(), opts.duration); return; }
+        const a = el.animate(keyframes, opts);
+        a.onfinish = () => el.remove();
+      };
+      const T = (x, y, s, r) => `translate(${x}px, ${y}px) translate(-50%, -50%) scale(${s}) rotate(${r}deg)`;
+
+      const burst = (x, y, set = CONF, count = 14) => {
+        const n = reduce ? Math.min(4, count) : count;
+        for (let i = 0; i < n; i++) {
+          const el = document.createElement('span');
+          el.className = 'fx';
+          el.textContent = pick(set);
+          el.style.fontSize = rand(16, 30) + 'px';
+          document.body.appendChild(el);
+          const ang = rand(0, Math.PI * 2), dist = rand(50, 130);
+          const dx = Math.cos(ang) * dist, up = Math.sin(ang) * dist - rand(20, 60);
+          const fall = rand(60, 140), rot = rand(-360, 360);
+          runFx(el, [
+            { transform: T(x, y, .3, 0), opacity: 1 },
+            { transform: T(x + dx * .75, y + up, 1.15, rot * .5), opacity: 1, offset: .5 },
+            { transform: T(x + dx, y + up + fall, .8, rot), opacity: 0 }
+          ], { duration: reduce ? 300 : rand(750, 1150), easing: 'cubic-bezier(.2,.7,.4,1)', fill: 'forwards' });
+        }
+      };
+
+      const popText = (x, y, text, cls = '') => {
+        const el = document.createElement('span');
+        el.className = 'fx pop ' + cls;
+        el.textContent = text;
+        document.body.appendChild(el);
+        const r = rand(-8, 8);
+        runFx(el, [
+          { transform: T(x, y, .4, r), opacity: 0 },
+          { transform: T(x, y - 18, 1.25, r), opacity: 1, offset: .25 },
+          { transform: T(x, y - 72, 1, r), opacity: 0 }
+        ], { duration: reduce ? 300 : 850, easing: 'ease-out', fill: 'forwards' });
+      };
+
+      const swing = (x, y) => {
+        if (reduce) return;
+        const el = document.createElement('span');
+        el.className = 'fx';
+        el.textContent = '🔨';
+        el.style.fontSize = '42px';
+        document.body.appendChild(el);
+        runFx(el, [
+          { transform: T(x, y, .9, -75), opacity: 0 },
+          { transform: T(x, y, 1, -75), opacity: 1, offset: .2 },
+          { transform: T(x, y + 10, 1.1, 20), opacity: 1, offset: .55 },
+          { transform: T(x, y + 10, 1, 20), opacity: 0 }
+        ], { duration: 380, easing: 'ease-in-out', fill: 'forwards' });
+      };
+
+      const rain = (n) => {
+        const count = reduce ? 6 : n;
+        for (let i = 0; i < count; i++) {
+          const el = document.createElement('span');
+          el.className = 'fx';
+          el.textContent = pick(CONF);
+          el.style.fontSize = rand(18, 32) + 'px';
+          document.body.appendChild(el);
+          const x = rand(0, window.innerWidth), sway = rand(-60, 60), rot = rand(-300, 300);
+          runFx(el, [
+            { transform: T(x, -30, 1, 0), opacity: 1 },
+            { transform: T(x + sway, window.innerHeight + 40, 1, rot), opacity: 1 }
+          ], { duration: reduce ? 400 : rand(1800, 3200), delay: reduce ? 0 : rand(0, 700), easing: 'ease-in', fill: 'both' });
+        }
+      };
+
+      /* ============================================================
+         MENU
+         ============================================================ */
+      const jokes = [
+        ['What do you call a sleeping dinosaur?', 'A dino-snore.'],
+        ['What do you call a bear with no teeth?', 'A gummy bear.'],
+        ['Why did the banana go to the doctor?', 'Because it was not peeling well.'],
+        ['Why do bees have sticky hair?', 'Because they use honeycombs.'],
+        ['What did the ocean say to the beach?', 'Nothing. It just waved.'],
+        ['Why was the math book sad?', 'It had too many problems.'],
+        ["Why can't a bicycle stand up by itself?", 'It is two tired.'],
+        ["What is a cat's favorite color?", 'Purr-ple.'],
+        ['Why did the cow go to space?', 'To see the moooon.'],
+        ['Why are fish so smart?', 'Because they live in schools.'],
+        ['What do you call a dog on a hot beach?', 'A hot dog.'],
+        ['Why did the teddy bear say no to dessert?', 'Because it was already stuffed.'],
+        ['What do you call a fish with no eyes?', 'A fsh.'],
+        ['Why did the chicken join a band?', 'Because it had drumsticks.']
+      ];
+      const realityChecks = [
+        "This feels very big right now because you are in the middle of it. Later, it will feel smaller.",
+        "You don't have to fix everything tonight. Just do one small thing: drink water, eat a snack, or take a nap.",
+        "Feeling bad does not mean you are doing life wrong. It means you are a human.",
+        "Your brain at 2 a.m. is not a good judge. Don't believe everything it says.",
+        "You can rest. You don't have to earn it first.",
+        "You don't need to answer every thought in your head. Some thoughts can wait.",
+        "It is okay to ask for help. Nobody is counting. I am just one message away.",
+        "Getting better is not a straight line. Some days go up and down, and that is okay.",
+        "This is a hard time, not your whole life."
+      ];
+      const awesomeNotes = [
+        "You remember small things about people. Not many people do that.",
+        "You have survived every bad day so far. That is a 100% success record!",
+        "You keep going even when it is hard. That is real strength.",
+        "You care a lot. That is why this hurts, and it is also why you are a good friend.",
+        "You are funny. You make hard moments feel lighter.",
+        "People feel safe to be honest with you. That is a special gift.",
+        "You have solved hard problems before. You can solve this one too.",
+        "Needing a break does not make you weak. It makes you smart."
+      ];
+
+      const makeBag = (arr) => {
+        let pool = [];
+        return () => {
+          if (!pool.length) {
+            pool = arr.slice();
+            for (let i = pool.length - 1; i > 0; i--) {
+              const j = Math.floor(Math.random() * (i + 1));
+              [pool[i], pool[j]] = [pool[j], pool[i]];
+            }
+          }
+          return pool.pop();
+        };
+      };
+      const nextJoke = makeBag(jokes);
+      const nextReality = makeBag(realityChecks);
+      const nextAwesome = makeBag(awesomeNotes);
+
+      const output = $('output');
+      let punchTimer = null;
+      let cheerCount = 0;
+
+      const rankFor = (n) => n >= 10 ? 'Cheer-Up Star 🏆' : n >= 6 ? 'Very Cheerful 🌈' : n >= 3 ? 'Joke Fan 😅' : 'Just started ☀️';
+
+      const para = (text, cls) => {
+        const p = document.createElement('p');
+        p.className = cls;
+        p.textContent = text;
+        return p;
+      };
+
+      const show = (kind, content) => {
+        clearTimeout(punchTimer);
+        cheerCount += 1;
+        const wrap = document.createElement('div');
+        wrap.append(...content);
+        const another = document.createElement('button');
+        another.type = 'button';
+        another.dataset.kind = kind;
+        another.className = 'another';
+        another.textContent = 'Another one! ↻';
+        const rank = para(`Cheer-ups so far: ${cheerCount} · ${rankFor(cheerCount)}`, 'mt-3 text-xs font-bold text-stone-400');
+        wrap.append(another, rank);
+        output.replaceChildren(wrap);
+        output.classList.remove('fade-in'); void output.offsetWidth; output.classList.add('fade-in');
+        if (!reduce) output.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      };
+
+      const handlers = {
+        joke() {
+          const [setup, punch] = nextJoke();
+          const b = para('• • •', 'mt-3 text-xl font-black drum');
+          show('joke', [para('🥁 Here is a joke', 'text-xs uppercase tracking-wider font-extrabold text-honey-500'),
+                        para(setup, 'mt-2 text-lg font-bold text-stone-700'), b]);
+          punchTimer = setTimeout(() => {
+            b.textContent = punch;
+            b.className = 'mt-3 text-xl font-black text-honey-600 punch-pop';
+            const r = b.getBoundingClientRect();
+            burst(r.left + r.width / 2, r.top + r.height / 2, ['✨', '🥁', '⭐'], 10);
+          }, reduce ? 0 : 1500);
+        },
+        reality() {
+          show('reality', [para('☕ Gentle reality check', 'text-xs uppercase tracking-wider font-extrabold text-lavender-400'),
+                           para(nextReality(), 'mt-2 text-lg font-bold text-stone-700')]);
+        },
+        awesome() {
+          show('awesome', [para('🌟 True things about you', 'text-xs uppercase tracking-wider font-extrabold text-peach-600'),
+                           para(nextAwesome(), 'mt-2 text-lg font-bold text-stone-700')]);
+          const r = output.getBoundingClientRect();
+          burst(r.left + r.width / 2, r.top + 30, ['⭐', '✨', '🌟'], 10);
+        }
+      };
+
+      document.addEventListener('click', (e) => {
+        const b = e.target.closest('[data-kind]');
+        if (b && handlers[b.dataset.kind]) handlers[b.dataset.kind]();
+      });
+
+      /* ============================================================
+         GAME: Whack-a-Worry
+         ============================================================ */
+      const WORRIES = ['Anxiety', 'Overthinking', 'Bad Days', 'Self-doubt', 'Deadlines', 'Stress',
+                       'Bad Mood', 'Low Battery', 'Tired Brain', 'Late Nights', 'Monday', 'Exams'];
+      const PALETTES = [
+        ['#ffd6a5', '#f8b24a', '#5b3b0f'],
+        ['#e4d9ff', '#a994e0', '#2f2160'],
+        ['#ffd9cf', '#f59a86', '#6b2412'],
+        ['#d9f2e3', '#7fcaa0', '#144a2c']
+      ];
+      const BONK = ['BONK!', 'POW!', 'BAM!', 'BYE!', 'POP!', 'ZAP!', 'NOPE!', 'SMASH!'];
+
+      const SAY_IDLE  = ["Hi! I'm Biscuit. I'll cheer for you. Press Start when you are ready. 🐾",
+                         "Worries are afraid of you. Really! 🐾",
+                         "I'm a dog, and I believe in you. 🐾"];
+      const SAY_HIT   = ['Nice one!', 'Great hit!', 'Bye bye, worry!', 'You are doing great!', 'Bye, Monday!'];
+      const SAY_COMBO = ['You are on fire! 🔥', 'So fast!', 'Wow, keep going!', 'The worries are running away!'];
+      const SAY_PUP   = ['Aww, thank you for the pats! 🦴', 'Good human! 🐾', 'Best day ever! (for me)'];
+      const SAY_GOLD  = ['Big win! 🌟', 'Golden worry gone!'];
+
+      const MODES = {
+        chill: { show: [1500, 2100], gap: [800, 1100], max: 2 },
+        zoomy: { show: [800, 1200],  gap: [420, 700],  max: 3 }
+      };
+      const GAME_MS = 30000;
+
+      const board = $('board'), overlay = $('overlay');
+      const scoreEl = $('score'), bestEl = $('best'), comboEl = $('combo');
+      const bar = $('bar'), timeEl = $('time'), timerEl = $('timer');
+      const mascot = $('mascot'), say = $('mascotSay');
+      const blocks = { intro: $('ovIntro'), count: $('ovCount'), over: $('ovOver') };
+      const pills = document.querySelectorAll('.pill');
+
+      let mode = 'chill';
+      let running = false, busy = false;
+      let score = 0, combo = 0, lastHit = 0, timeLeft = GAME_MS;
+      let tickTimer = null, spawnTimer = null, countTimer = null, lastText = '';
+      const slots = Array(9).fill(null);
+      const cells = [];
+
+      let best = 0;
+      try { best = parseInt(localStorage.getItem('cheerup-best') || '0', 10) || 0; } catch (e) { /* storage blocked: fine */ }
+      bestEl.textContent = best;
+
+      const setSay = (text, cheer) => {
+        say.textContent = text;
+        say.classList.remove('say-pop'); void say.offsetWidth; say.classList.add('say-pop');
+        if (cheer) {
+          mascot.classList.remove('cheer'); void mascot.offsetWidth; mascot.classList.add('cheer');
+          setTimeout(() => mascot.classList.remove('cheer'), 600);
+        }
+      };
+      setSay(pick(SAY_IDLE), false);
+
+      /* Build the 3x3 board */
+      for (let i = 0; i < 9; i++) {
+        const cell = document.createElement('button');
+        cell.type = 'button';
+        cell.className = 'cell';
+        cell.setAttribute('aria-label', 'Worry hole ' + (i + 1));
+        cell.innerHTML =
+          '<span class="hole-back"></span>' +
+          '<span class="worry"><span class="eyes"><i></i><i></i></span><span class="wtxt"></span></span>' +
+          '<span class="mound"></span>';
+        cell.addEventListener('click', () => whack(i));
+        board.appendChild(cell);
+        cells.push(cell);
+      }
+
+      const setOverlay = (state) => {
+        Object.keys(blocks).forEach((k) => { blocks[k].hidden = k !== state; });
+        overlay.classList.toggle('is-hidden', !state);
+      };
+
+      const bumpEl = (el) => { el.classList.remove('bump'); void el.offsetWidth; el.classList.add('bump'); };
+      const updateCombo = () => { comboEl.textContent = combo >= 2 ? 'x' + combo + ' 🔥' : '–'; if (combo >= 2) bumpEl(comboEl); };
+
+      const hideSlot = (i) => {
+        if (!slots[i]) return;
+        clearTimeout(slots[i].timer);
+        slots[i] = null;
+        cells[i].classList.remove('up');
+        cells[i].setAttribute('aria-label', 'Worry hole ' + (i + 1));
+      };
+
+      const showWorry = (i) => {
+        const r = Math.random();
+        const type = r < .10 ? 'pup' : r < .20 ? 'gold' : 'worry';
+        const cell = cells[i];
+        const worry = cell.querySelector('.worry');
+        const txt = cell.querySelector('.wtxt');
+
+        worry.classList.remove('hit', 'golden', 'pup');
+        let text, fs;
+        if (type === 'pup') {
+          text = '🐶'; worry.classList.add('pup');
+          worry.style.setProperty('--wbg', 'radial-gradient(circle at 35% 28%, #fff8e7, #f0d3a8)');
+          worry.style.setProperty('--wfg', '#5a3b1c');
+        } else {
+          if (type === 'gold') { text = 'Mondays'; worry.classList.add('golden'); worry.style.removeProperty('--wbg'); worry.style.setProperty('--wfg', '#5b3b0f'); }
+          else {
+            do { text = pick(WORRIES); } while (text === lastText);
+            lastText = text;
+            const p = pick(PALETTES);
+            worry.style.setProperty('--wbg', `radial-gradient(circle at 35% 28%, ${p[0]}, ${p[1]})`);
+            worry.style.setProperty('--wfg', p[2]);
+          }
+          const len = text.length;
+          fs = len <= 6 ? 15 : len <= 9 ? 13 : len <= 11 ? 11.5 : 10;
+          worry.style.setProperty('--fs', fs);
+        }
+        txt.textContent = text;
+
+        const m = MODES[mode];
+        const frac = 1 - timeLeft / GAME_MS;
+        let dur = rand(m.show[0], m.show[1]) * Math.max(.75, 1 - frac * .25);
+        if (type === 'pup') dur *= 1.2;
+        if (type === 'gold') dur *= .9;
+
+        slots[i] = { type, timer: setTimeout(() => hideSlot(i), dur) };
+        cell.classList.add('up');
+        cell.setAttribute('aria-label', type === 'pup' ? 'Tap the puppy for bonus points' : 'Tap the worry: ' + text);
+      };
+
+      const spawn = () => {
+        if (!running) return;
+        const m = MODES[mode];
+        const free = slots.map((s, i) => (s ? -1 : i)).filter((i) => i >= 0);
+        const active = slots.length - free.length;
+        if (active < m.max && free.length) showWorry(pick(free));
+        spawnTimer = setTimeout(spawn, rand(m.gap[0], m.gap[1]));
+      };
+
+      const whack = (i) => {
+        if (!running || !slots[i]) return;
+        const s = slots[i];
+        clearTimeout(s.timer);
+        slots[i] = null;
+
+        const cell = cells[i];
+        const worry = cell.querySelector('.worry');
+        worry.classList.add('hit');
+        cell.classList.remove('up');
+        cell.classList.remove('jolt'); void cell.offsetWidth; cell.classList.add('jolt');
+        cell.setAttribute('aria-label', 'Worry hole ' + (i + 1));
+
+        const val = s.type === 'gold' ? 3 : s.type === 'pup' ? 2 : 1;
+        score += val;
+        scoreEl.textContent = score;
+        bumpEl(scoreEl);
+
+        const now = performance.now();
+        combo = now - lastHit < 1400 ? combo + 1 : 1;
+        lastHit = now;
+        updateCombo();
+
+        const rect = cell.getBoundingClientRect();
+        const cx = rect.left + rect.width / 2, cy = rect.top + rect.height * .45;
+        swing(cx + rect.width * .28, cy - rect.height * .22);
+
+        if (s.type === 'pup') {
+          burst(cx, cy, PUPCONF, 14);
+          popText(cx, cy - rect.height * .2, pick(['GOOD PUP!', 'AWW!', 'PAT PAT!']), 'pupc');
+          setSay(pick(SAY_PUP), true);
+        } else {
+          burst(cx, cy, CONF, s.type === 'gold' ? 24 : 14);
+          popText(cx, cy - rect.height * .2, s.type === 'gold' ? pick(['BIG WIN!', 'GOLDEN!']) : pick(BONK), s.type === 'gold' ? 'gold' : '');
+          if (s.type === 'gold') setSay(pick(SAY_GOLD), true);
+          else if (combo >= 3 && combo % 3 === 0) setSay(pick(SAY_COMBO), true);
+          else if (Math.random() < .3) setSay(pick(SAY_HIT), true);
+        }
+        popText(cx + rect.width * .3, cy + rect.height * .05, '+' + val, 'plus');
+
+        if (s.type === 'gold' && !reduce) { board.classList.remove('shake'); void board.offsetWidth; board.classList.add('shake'); }
+        try { if (navigator.vibrate) navigator.vibrate(s.type === 'gold' ? 30 : 12); } catch (e) { /* ignore */ }
+      };
+
+      const tick = () => {
+        timeLeft -= 100;
+        const t = Math.max(timeLeft, 0);
+        bar.style.width = (t / GAME_MS * 100) + '%';
+        timeEl.textContent = Math.ceil(t / 1000) + 's';
+        timerEl.setAttribute('aria-valuenow', String(Math.ceil(t / 1000)));
+        if (t <= 5000) timerEl.classList.add('hurry');
+        if (combo && performance.now() - lastHit > 1500) { combo = 0; updateCombo(); }
+        if (t <= 0) endGame();
+      };
+
+      const lock = (on) => pills.forEach((p) => { p.disabled = on; });
+
+      const endGame = () => {
+        running = false; busy = false;
+        clearInterval(tickTimer); clearTimeout(spawnTimer);
+        slots.forEach((_, i) => hideSlot(i));
+        lock(false);
+        timerEl.classList.remove('hurry');
+
+        let line, bark;
+        if (score === 0)       { line = 'No points this time, and that is okay. Sometimes you just need to sit with your worries. Try again anytime.'; bark = 'No stress. I am proud of you anyway. 🐾'; }
+        else if (score < 8)    { line = 'Good start! The worries are a little scared.'; bark = 'Good start! Again?'; }
+        else if (score < 16)   { line = 'Great job! The worries are running away. 🎉'; bark = 'I am so happy! 🐾'; }
+        else if (score < 25)   { line = 'Amazing! The worries are hiding now.'; bark = 'WOOF! That was great!'; }
+        else                   { line = 'Superstar! All the worries are gone. 🏆'; bark = 'I am running a victory lap! 🏃🐶'; }
+
+        if (score > best) {
+          best = score; bestEl.textContent = best;
+          try { localStorage.setItem('cheerup-best', String(best)); } catch (e) { /* ignore */ }
+          line += ' New best score!';
+        }
+        $('finalScore').textContent = score;
+        $('finalMsg').textContent = line;
+        setOverlay('over');
+        setSay(bark, true);
+        if (score >= 8) rain(Math.min(40, 14 + score));
+      };
+
+      const startRound = () => {
+        running = true;
+        timeLeft = GAME_MS;
+        bar.style.width = '100%';
+        timeEl.textContent = '30s';
+        setOverlay(null);
+        setSay('Go! Tap the worries! 🐾', true);
+        tickTimer = setInterval(tick, 100);
+        spawn();
+      };
+
+      const begin = () => {
+        if (busy) return;
+        busy = true;
+        score = 0; combo = 0;
+        scoreEl.textContent = '0';
+        updateCombo();
+        timerEl.classList.remove('hurry');
+        bar.style.width = '100%'; timeEl.textContent = '30s';
+        lock(true);
+        setOverlay('count');
+        setSay('Get ready! 🐾', false);
+
+        const seq = ['3', '2', '1', 'GO!'];
+        const num = $('countNum');
+        let k = 0;
+        const step = () => {
+          num.textContent = seq[k];
+          num.style.animation = 'none'; void num.offsetWidth; num.style.animation = '';
+          k += 1;
+          if (k < seq.length) countTimer = setTimeout(step, 700);
+          else countTimer = setTimeout(startRound, 600);
+        };
+        step();
+      };
+
+      $('startBtn').addEventListener('click', begin);
+      $('againBtn').addEventListener('click', begin);
+
+      pills.forEach((p) => p.addEventListener('click', () => {
+        if (busy) return;
+        mode = p.dataset.mode;
+        pills.forEach((q) => { const on = q === p; q.classList.toggle('is-on', on); q.setAttribute('aria-checked', String(on)); });
+        setSay(mode === 'chill' ? 'Slow mode: nice and easy. 🐢' : 'Fast mode! Hold on tight! 🐇', true);
+      }));
+
+      setOverlay('intro');
+    })();
+  </script>
+</body>
+</html>
